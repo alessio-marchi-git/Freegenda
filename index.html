@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freegenda</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>Freegenda</h1>
+      <div class="view-controls">
+        <div class="view-toggle" role="tablist" aria-label="Agenda views">
+          <button type="button" class="view-button active" data-view="day" role="tab" aria-selected="true">Day</button>
+          <button type="button" class="view-button" data-view="week" role="tab" aria-selected="false">Week</button>
+          <button type="button" class="view-button" data-view="month" role="tab" aria-selected="false">Month</button>
+        </div>
+        <div class="view-navigation">
+          <button type="button" class="nav-button" data-action="prev" aria-label="Previous">&#8592;</button>
+          <button type="button" class="nav-button" data-action="today">Today</button>
+          <button type="button" class="nav-button" data-action="next" aria-label="Next">&#8594;</button>
+        </div>
+      </div>
+      <div class="date-indicator" aria-live="polite"></div>
+    </header>
+
+    <main class="app-body">
+      <section class="agenda" aria-live="polite">
+        <div id="view-container" class="view-container"></div>
+      </section>
+      <aside class="suggestions" aria-live="polite">
+        <h2>Activity Suggestions</h2>
+        <p class="suggestions-caption">Select a day to see ideas sorted from quickest to longest.</p>
+        <ul id="suggestion-list" class="suggestion-list">
+          <li class="empty-state">Choose a day in the agenda to get started.</li>
+        </ul>
+        <p id="allocation-hint" class="allocation-hint" aria-live="polite"></p>
+        <form id="custom-activity-form" class="activity-form">
+          <h3>Add Custom Activity</h3>
+          <label class="form-field">
+            <span>Activity name</span>
+            <input id="activity-name" name="activityName" type="text" placeholder="e.g., Evening walk" autocomplete="off" required>
+          </label>
+          <div class="form-field inline">
+            <label>
+              <span>Duration (minutes)</span>
+              <input id="activity-duration" name="activityDuration" type="number" min="1" step="1" placeholder="30" required>
+            </label>
+            <button type="submit" class="add-activity-button">Add</button>
+          </div>
+          <p class="form-footnote">New ideas appear in the list sorted by duration.</p>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
