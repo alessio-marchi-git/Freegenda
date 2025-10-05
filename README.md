@@ -2,6 +2,9 @@
 
 Freegenda is a lightweight evening and early-morning agenda planner that helps night owls map out their most flexible hours. It ships as a static web app with no build step, so you can open it directly in a browser or drop it onto any static host.
 
+## Preview
+![Screenshot of the Freegenda agenda view.](screenshot/home.png)
+
 ## Features
 - Toggleable day, week, and month views that sync to the currently selected date
 - Agenda timeline focused on 19:00–07:00 with quick slot allocation and removal
