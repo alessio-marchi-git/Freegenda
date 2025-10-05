@@ -2,11 +2,13 @@
 
 Thanks for your interest in improving Freegenda! This guide explains how to propose changes, report issues, and keep the project healthy.
 
+**Licensing note:** By contributing you agree to the Freegenda GitHub Source-Available License (FGSAL). Keep any forks private and submit changes via pull requests to this repository. Contributions are assigned to the maintainers as described in the license.
+
 ## Code of Conduct
 Be respectful, constructive, and inclusive. Assume good intent and help others grow. If you see behavior that conflicts with this spirit, please open a confidential issue or contact the maintainer directly.
 
 ## Getting Started
-1. Fork the repository and create a feature branch from `main` (for example, `feat/activity-filters`).
+1. Create a private fork of the repository and branch from `main` (for example, `feat/activity-filters`). Public distribution of forks or mirrors is not permitted.
 2. Clone your fork locally and install any tooling you need (no dependencies are required by default).
 3. Run a static server or open `index.html` directly in a browser to develop and verify changes.
 

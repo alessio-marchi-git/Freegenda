@@ -47,4 +47,4 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on proposing change
 Key releases and highlights live in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
-A license has not been added yet. Choose and include one (for example, MIT or Apache-2.0) before distributing a public release.
+Freegenda is distributed under the Freegenda GitHub Source-Available License (FGSAL). The license permits personal evaluation on GitHub only; commercial use, redistribution, and public forks are prohibited. See [`LICENSE`](LICENSE) for the full terms.
