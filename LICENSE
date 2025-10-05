@@ -1,0 +1,35 @@
+Freegenda Proprietary License (FPL)
+Version 1.0 – April 2024
+
+Copyright (c) 2024 Freegenda contributors
+All rights reserved.
+
+1. Definitions
+   "Software" refers to the Freegenda project located at https://github.com/ and any accompanying source code, documentation, assets, and binaries made available in this repository.
+
+2. Limited Grant
+   You may download, view, and locally run the Software solely for personal evaluation and non-commercial testing. No other rights are granted.
+
+3. Restrictions
+   You must not:
+   a. Copy, redistribute, publish, or sublicense the Software or any derivative work.
+   b. Modify, translate, adapt, reverse engineer, or create derivative works of the Software.
+   c. Use the Software, in whole or in part, in any commercial product, service, or internal business operation.
+   d. Remove or alter any proprietary notices or marks contained in the Software.
+
+4. Contributions
+   By submitting any contribution (including pull requests, issues with code snippets, or other material), you agree that the contribution becomes the exclusive property of the Freegenda maintainers. You represent and warrant that you have the authority to grant this assignment and that the contribution does not infringe any third-party rights.
+
+5. Termination
+   This license automatically terminates if you fail to comply with any term. Upon termination, you must permanently delete all copies of the Software in your possession.
+
+6. No Warranty
+   The Software is provided "as is" without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+7. Limitation of Liability
+   In no event shall the authors or copyright holders be liable for any claim, damages, or other liability arising from, out of, or in connection with the Software or the use of the Software.
+
+8. Governing Law
+   This license is governed by the laws of the jurisdiction in which the principal maintainer resides, without regard to conflict-of-law principles.
+
+For any use beyond the scope of this License, contact the Freegenda maintainers for a separate written agreement.
