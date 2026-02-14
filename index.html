@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'">
   <title>Freegenda</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a href="#view-container" class="skip-link">Skip to agenda</a>
   <div class="app">
     <header class="app-header">
       <h1>Freegenda</h1>
@@ -40,12 +42,12 @@
           <h3>Add Custom Activity</h3>
           <label class="form-field">
             <span>Activity name</span>
-            <input id="activity-name" name="activityName" type="text" placeholder="e.g., Evening walk" autocomplete="off" required>
+            <input id="activity-name" name="activityName" type="text" placeholder="e.g., Evening walk" autocomplete="off" maxlength="80" required>
           </label>
           <div class="form-field inline">
             <label>
               <span>Duration (minutes)</span>
-              <input id="activity-duration" name="activityDuration" type="number" min="1" step="1" placeholder="30" required>
+              <input id="activity-duration" name="activityDuration" type="number" min="1" max="1440" step="1" placeholder="30" required>
             </label>
             <button type="submit" class="add-activity-button">Add</button>
           </div>
