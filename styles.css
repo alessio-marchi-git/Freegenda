@@ -123,6 +123,16 @@ body {
   background: var(--accent-light);
 }
 
+.nav-button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.view-button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .date-indicator {
   font-size: 18px;
   font-weight: 600;
@@ -238,6 +248,11 @@ body {
   box-shadow: inset 0 0 0 2px var(--accent-light);
 }
 
+.slot-content:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .slot-content.is-filled {
   background: var(--accent-light);
   box-shadow: inset 0 0 0 2px var(--accent);
@@ -286,6 +301,11 @@ body {
 
 .week-day-header:hover {
   background: var(--accent-light);
+}
+
+.week-day-header:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .week-day-header strong {
@@ -337,6 +357,12 @@ body {
   border-color: var(--accent-light);
 }
 
+.week-hour-slot:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
 .week-hour-slot.is-filled {
   background: var(--accent-light);
   border-color: var(--accent);
@@ -376,8 +402,27 @@ body {
   transform: translateY(-1px);
 }
 
+.month-day:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .month-day-number {
   font-weight: 600;
+}
+
+.month-day-dots {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.month-dot-visual {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 .is-today {
@@ -457,6 +502,7 @@ body {
 .empty-state {
   text-align: center;
   color: var(--muted);
+  cursor: default;
 }
 
 .allocation-hint {
@@ -464,6 +510,11 @@ body {
   color: var(--muted);
   font-size: 13px;
   margin: 0;
+  transition: color 0.2s ease;
+}
+
+.allocation-hint.is-error {
+  color: #ef4444;
 }
 
 .activity-form {
@@ -516,6 +567,11 @@ body {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.activity-form input:invalid:not(:placeholder-shown) {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
 }
 
 .add-activity-button {
@@ -571,4 +627,25 @@ body {
   .agenda {
     padding: 16px;
   }
+
+  .week-view {
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .week-day {
+    scroll-snap-align: start;
+  }
+}
+
+.nav-button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.view-button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
