@@ -1,3 +1,5 @@
+const STORAGE_KEY = "freegenda-data";
+
 const NIGHT_HOURS = Array.from({ length: 5 }, (_, index) => 19 + index); // 19:00 to 23:00
 const EARLY_HOURS = Array.from({ length: 8 }, (_, index) => index); // 00:00 to 07:00
 const HOURS = [...NIGHT_HOURS, ...EARLY_HOURS];
@@ -17,8 +19,6 @@ const INITIAL_ACTIVITIES = sortActivities([
   { id: "activity-12", name: "Meal prep for the week", duration: 80 }
 ]);
 
-let activityIdCounter = INITIAL_ACTIVITIES.length;
-
 const STATE = {
   currentView: "day",
   selectedDate: stripTime(new Date()),
@@ -29,6 +29,8 @@ const STATE = {
   allocationHint: "",
   allocations: {} // { dateKey: { hour: { id, name, duration } } }
 };
+
+let activityIdCounter = INITIAL_ACTIVITIES.length;
 
 const viewContainer = document.getElementById("view-container");
 const viewButtons = document.querySelectorAll(".view-button");
@@ -41,6 +43,7 @@ const activityForm = document.getElementById("custom-activity-form");
 const activityNameInput = document.getElementById("activity-name");
 const activityDurationInput = document.getElementById("activity-duration");
 
+loadState();
 STATE.viewDate = getViewAnchor(STATE.selectedDate, STATE.currentView);
 render();
 
@@ -80,7 +83,7 @@ activityForm.addEventListener("submit", (event) => {
   const duration = Number(activityDurationInput.value);
 
   if (!name || !Number.isFinite(duration) || duration <= 0) {
-    setAllocationHint("Enter a name and a duration greater than zero minutes.");
+    setAllocationHint("Enter a name and a duration greater than zero minutes.", true);
     return;
   }
 
@@ -99,6 +102,7 @@ activityForm.addEventListener("submit", (event) => {
   activityForm.reset();
   activityNameInput.focus();
   renderSuggestions();
+  saveState();
 });
 
 document.addEventListener("keydown", (event) => {
@@ -109,10 +113,47 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+// --- Persistence ---
+
+function saveState() {
+  try {
+    const data = {
+      allocations: STATE.allocations,
+      activities: STATE.activities,
+      currentView: STATE.currentView,
+      activityIdCounter: activityIdCounter
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch { /* quota exceeded or private browsing — silently ignore */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.allocations && typeof data.allocations === "object") {
+      STATE.allocations = data.allocations;
+    }
+    if (Array.isArray(data.activities) && data.activities.length > 0) {
+      STATE.activities = sortActivities(data.activities);
+    }
+    if (data.currentView && ["day", "week", "month"].includes(data.currentView)) {
+      STATE.currentView = data.currentView;
+    }
+    if (typeof data.activityIdCounter === "number" && data.activityIdCounter > activityIdCounter) {
+      activityIdCounter = data.activityIdCounter;
+    }
+  } catch { /* corrupted data — start fresh */ }
+}
+
+// --- View logic ---
+
 function setView(view) {
   STATE.currentView = view;
   STATE.viewDate = getViewAnchor(STATE.selectedDate, view);
   render();
+  saveState();
 }
 
 function setSelectedDate(date, options = {}) {
@@ -127,6 +168,7 @@ function setSelectedDate(date, options = {}) {
     if (!options.preserveHint) {
       STATE.allocationHint = "";
       allocationHintEl.textContent = "";
+      allocationHintEl.classList.remove("is-error");
     }
   }
 
@@ -134,7 +176,7 @@ function setSelectedDate(date, options = {}) {
 }
 
 function render() {
-  viewContainer.innerHTML = "";
+  viewContainer.textContent = "";
 
   if (STATE.currentView === "day") {
     viewContainer.appendChild(renderDayView());
@@ -149,6 +191,8 @@ function render() {
   renderSuggestions();
 }
 
+// --- Day view ---
+
 function renderDayView() {
   const wrapper = document.createElement("div");
   wrapper.className = "day-view";
@@ -158,24 +202,27 @@ function renderDayView() {
 
   const headerLeft = document.createElement("div");
   headerLeft.className = "day-header-left";
-  headerLeft.innerHTML = `
-    <span>${formatWeekdayLong(STATE.selectedDate)}</span>
-    <span>${formatDateWithoutWeekday(STATE.selectedDate)}</span>
-  `;
+  const weekdaySpan = document.createElement("span");
+  weekdaySpan.textContent = formatWeekdayLong(STATE.selectedDate);
+  const dateSpan = document.createElement("span");
+  dateSpan.textContent = formatDateWithoutWeekday(STATE.selectedDate);
+  headerLeft.append(weekdaySpan, dateSpan);
 
   const picker = document.createElement("label");
   picker.className = "date-picker";
-  picker.innerHTML = `
-    <span class="visually-hidden">Pick a day</span>
-    <input type="date" value="${formatForInput(STATE.selectedDate)}" aria-label="Select a day">
-  `;
-
-  const input = picker.querySelector("input");
-  input.addEventListener("change", (event) => {
+  const pickerLabel = document.createElement("span");
+  pickerLabel.className = "visually-hidden";
+  pickerLabel.textContent = "Pick a day";
+  const pickerInput = document.createElement("input");
+  pickerInput.type = "date";
+  pickerInput.value = formatForInput(STATE.selectedDate);
+  pickerInput.setAttribute("aria-label", "Select a day");
+  pickerInput.addEventListener("change", (event) => {
     if (event.target.value) {
       setSelectedDate(new Date(event.target.value), { fromUser: true });
     }
   });
+  picker.append(pickerLabel, pickerInput);
 
   header.append(headerLeft, picker);
   wrapper.appendChild(header);
@@ -195,14 +242,22 @@ function renderDayView() {
     slot.dataset.hour = String(hour);
     populateDaySlot(slot, allocations[String(hour)], hour, STATE.selectedDate);
 
-    slot.addEventListener("click", () => handleSlotSelection(STATE.selectedDate, hour));
-
     grid.append(label, slot);
+  });
+
+  // Event delegation for day grid slots
+  grid.addEventListener("click", (event) => {
+    const slot = event.target.closest(".slot-content");
+    if (!slot) return;
+    const hour = Number(slot.dataset.hour);
+    handleSlotSelection(STATE.selectedDate, hour);
   });
 
   wrapper.appendChild(grid);
   return wrapper;
 }
+
+// --- Week view ---
 
 function renderWeekView() {
   const wrapper = document.createElement("div");
@@ -216,14 +271,20 @@ function renderWeekView() {
 
     const column = document.createElement("div");
     column.className = "week-day";
+    column.dataset.date = dateKey;
 
     const header = document.createElement("div");
     header.className = "week-day-header";
     header.dataset.date = dateKey;
-    header.innerHTML = `
-      <strong ${isToday(date) ? 'class="is-today"' : ""}>${formatWeekdayShort(date)}</strong>
-      <span>${formatDayAndMonth(date)}</span>
-    `;
+
+    const strong = document.createElement("strong");
+    if (isToday(date)) strong.className = "is-today";
+    strong.textContent = formatWeekdayShort(date);
+
+    const dateLabel = document.createElement("span");
+    dateLabel.textContent = formatDayAndMonth(date);
+
+    header.append(strong, dateLabel);
 
     if (isSameDay(date, STATE.selectedDate)) {
       header.classList.add("is-selected");
@@ -243,12 +304,16 @@ function renderWeekView() {
       const activity = allocations[String(hour)];
       populateWeekSlot(slot, activity, hour);
 
-      slot.addEventListener("click", () => {
-        setSelectedDate(date, { fromUser: true, preserveHint: true });
-        handleSlotSelection(date, hour);
-      });
-
       hours.appendChild(slot);
+    });
+
+    // Event delegation for week hour slots within this column
+    hours.addEventListener("click", (event) => {
+      const slot = event.target.closest(".week-hour-slot");
+      if (!slot) return;
+      const hour = Number(slot.dataset.hour);
+      setSelectedDate(date, { fromUser: true, preserveHint: true });
+      handleSlotSelection(date, hour);
     });
 
     column.appendChild(hours);
@@ -258,17 +323,21 @@ function renderWeekView() {
   return wrapper;
 }
 
+// --- Month view ---
+
 function renderMonthView() {
   const wrapper = document.createElement("div");
   wrapper.className = "month-view";
 
-  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  dayNames.forEach((name) => {
+  // Localized day names (Monday-first)
+  const referenceMonday = new Date(2024, 0, 1); // Jan 1 2024 = Monday
+  for (let i = 0; i < 7; i += 1) {
+    const dayDate = addDays(referenceMonday, i);
     const dayNameEl = document.createElement("div");
     dayNameEl.className = "month-day-name";
-    dayNameEl.textContent = name;
+    dayNameEl.textContent = dayDate.toLocaleDateString(undefined, { weekday: "short" });
     wrapper.appendChild(dayNameEl);
-  });
+  }
 
   const firstOfMonth = getViewAnchor(STATE.viewDate, "month");
   const month = firstOfMonth.getMonth();
@@ -294,9 +363,31 @@ function renderMonthView() {
     }
 
     const dayNumber = document.createElement("span");
-    dayNumber.className = `month-day-number ${isToday(date) ? "is-today" : ""}`;
+    dayNumber.className = "month-day-number";
+    if (isToday(date)) dayNumber.classList.add("is-today");
     dayNumber.textContent = day;
     cell.appendChild(dayNumber);
+
+    // Allocation dot indicators
+    const dayAllocations = STATE.allocations[dateKey];
+    if (dayAllocations) {
+      const count = Object.keys(dayAllocations).length;
+      if (count > 0) {
+        const dotsContainer = document.createElement("span");
+        dotsContainer.className = "month-day-dots";
+        const maxDots = Math.min(count, 5);
+        for (let d = 0; d < maxDots; d += 1) {
+          const dot = document.createElement("span");
+          dot.className = "month-dot-visual";
+          dot.setAttribute("aria-hidden", "true");
+          dotsContainer.appendChild(dot);
+        }
+        const srLabel = document.createElement("span");
+        srLabel.className = "visually-hidden";
+        srLabel.textContent = `${count} scheduled`;
+        cell.append(dotsContainer, srLabel);
+      }
+    }
 
     cell.addEventListener("click", () => setSelectedDate(date, { fromUser: true }));
     wrapper.appendChild(cell);
@@ -304,6 +395,8 @@ function renderMonthView() {
 
   return wrapper;
 }
+
+// --- Slot rendering ---
 
 function populateDaySlot(slot, activity, hour, date) {
   const label = formatHour(hour);
@@ -319,7 +412,7 @@ function populateDaySlot(slot, activity, hour, date) {
     durationEl.textContent = formatDuration(activity.duration);
 
     slot.append(nameEl, durationEl);
-    slot.title = `${activity.name} at ${label} on ${formatFullDate(date)}`;
+    slot.setAttribute("title", `${activity.name} at ${label} on ${formatFullDate(date)}`);
   } else {
     slot.classList.remove("is-filled");
     slot.textContent = "";
@@ -327,7 +420,7 @@ function populateDaySlot(slot, activity, hour, date) {
     placeholder.className = "slot-placeholder";
     placeholder.textContent = "Available";
     slot.appendChild(placeholder);
-    slot.title = `Available slot at ${label}`;
+    slot.setAttribute("title", `Available slot at ${label}`);
   }
 }
 
@@ -345,13 +438,15 @@ function populateWeekSlot(slot, activity, hour) {
     nameEl.textContent = activity.name;
 
     slot.append(timeEl, nameEl);
-    slot.title = `${activity.name} at ${label}`;
+    slot.setAttribute("title", `${activity.name} at ${label}`);
   } else {
     slot.classList.remove("is-filled");
     slot.textContent = label;
-    slot.title = `Available slot at ${label}`;
+    slot.setAttribute("title", `Available slot at ${label}`);
   }
 }
+
+// --- View button state ---
 
 function updateViewButtons() {
   viewButtons.forEach((button) => {
@@ -361,8 +456,10 @@ function updateViewButtons() {
   });
 }
 
+// --- Suggestions panel ---
+
 function renderSuggestions() {
-  suggestionList.innerHTML = "";
+  suggestionList.textContent = "";
 
   if (!STATE.hasManualSelection) {
     suggestionsCaption.textContent = "Select a day to see ideas sorted from quickest to longest.";
@@ -398,22 +495,33 @@ function renderSuggestions() {
     duration.textContent = formatDuration(activity.duration);
 
     item.append(name, duration);
-
-    item.addEventListener("click", () => toggleActivitySelection(activity.id));
-    item.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        toggleActivitySelection(activity.id);
-      }
-    });
-
     suggestionList.appendChild(item);
   });
+
+  // Event delegation for suggestion list
+  suggestionList.addEventListener("click", handleSuggestionClick);
+  suggestionList.addEventListener("keydown", handleSuggestionKeydown);
 
   if (!STATE.allocationHint) {
     setAllocationHint("Select an activity, then click a time slot between 19:00 and 07:00 to schedule it.");
   }
 }
+
+function handleSuggestionClick(event) {
+  const item = event.target.closest("li[data-activity-id]");
+  if (!item) return;
+  toggleActivitySelection(item.dataset.activityId);
+}
+
+function handleSuggestionKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const item = event.target.closest("li[data-activity-id]");
+  if (!item) return;
+  event.preventDefault();
+  toggleActivitySelection(item.dataset.activityId);
+}
+
+// --- Activity and slot selection ---
 
 function toggleActivitySelection(activityId) {
   if (STATE.selectedActivityId === activityId) {
@@ -440,32 +548,42 @@ function handleSlotSelection(date, hour) {
   if (STATE.selectedActivityId) {
     const activity = findActivity(STATE.selectedActivityId);
     if (!activity) {
-      setAllocationHint("Activity unavailable. Please choose another option.");
+      setAllocationHint("Activity unavailable. Please choose another option.", true);
       return;
     }
     allocations[hourKey] = { id: activity.id, name: activity.name, duration: activity.duration };
     setAllocationHint(`"${activity.name}" scheduled at ${formatHour(hour)}.`);
     STATE.selectedActivityId = null;
     render();
+    saveState();
     return;
   }
 
   if (allocations[hourKey]) {
     const removed = allocations[hourKey];
     delete allocations[hourKey];
+    if (Object.keys(allocations).length === 0) {
+      delete STATE.allocations[dateKey];
+    }
     setAllocationHint(`Removed "${removed.name}" from ${formatHour(hour)}.`);
     render();
+    saveState();
     return;
   }
 
   setAllocationHint("Select an activity first, then choose a time slot between 19:00 and 07:00.");
 }
 
-function setAllocationHint(message) {
+// --- Hint display ---
+
+function setAllocationHint(message, isError) {
   if (STATE.allocationHint === message) return;
   STATE.allocationHint = message;
   allocationHintEl.textContent = message;
+  allocationHintEl.classList.toggle("is-error", !!isError);
 }
+
+// --- Lookups ---
 
 function findActivity(activityId) {
   return STATE.activities.find((activity) => activity.id === activityId) || null;
@@ -475,6 +593,8 @@ function getAllocationsForDate(date) {
   const dateKey = formatDateKey(date);
   return STATE.allocations[dateKey] || {};
 }
+
+// --- Formatting ---
 
 function formatIndicator() {
   if (STATE.currentView === "day") {
@@ -494,6 +614,8 @@ function formatIndicator() {
   const monthAnchor = getViewAnchor(STATE.viewDate, "month");
   return `${formatMonthName(monthAnchor)} ${monthAnchor.getFullYear()}`;
 }
+
+// --- Date utilities ---
 
 function getViewAnchor(date, view) {
   if (view === "day") {
