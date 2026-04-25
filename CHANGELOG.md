@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 ### Changed
 - Adopted the Freegenda GitHub Source-Available License (FGSAL) and updated contributor guidance to reflect the new terms.
+- Added a repository-wide technical review document (`REVIEW_TOTALE.md`) with prioritized remediation proposals.
 
 ## [0.1.0] - 2025-10-04
 ### Added
